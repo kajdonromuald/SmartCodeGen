@@ -1,0 +1,72 @@
+smartcodegen/
+├── backend/                       # Java backend (Spring Boot vagy sima Java)
+│   ├── src/
+│   │   ├── controller/
+│   │   │   └── CodeGenController.java
+│   │   ├── service/
+│   │   │   └── CodeGenService.java
+│   │   ├── model/
+│   │   │   └── UserRequest.java
+│   │   ├── util/
+│   │   │   └── TemplateBuilder.java
+│   │   ├── security/
+│   │   │   └── JwtValidator.java
+│   │   └── ai/
+│   │       └── AIEngine.java       # Logika, ami az "intelligens" válaszokat adja
+│   ├── test/
+│   │   └── CodeGenServiceTest.java
+│   ├── resources/
+│   │   └── application.properties
+│   └── pom.xml                     # Maven konfiguráció
+│
+├── frontend/                      # Frontend (statikus vagy dinamikus)
+│   ├── public/
+│   │   └── index.html              # Fő oldal
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── app.js
+│   ├── assets/
+│   │   └── logo.png
+│   └── auth/
+│       └── login.php              # PHP-alapú bejelentkezés (JWT-vel)
+│
+├── php-api/                       # Opcionális PHP backend rész (auth, DB)
+│   ├── config/
+│   │   └── database.php
+│   ├── auth/
+│   │   ├── login.php
+│   │   ├── register.php
+│   │   └── verify-jwt.php
+│   ├── utils/
+│   │   └── jwt-handler.php
+│   └── .htaccess
+│
+├── database/
+│   ├── schema.sql                 # Adatbázis szerkezet (felhasználók, logok)
+│   └── seed.sql                   # Tesztadatok
+│
+├── docs/                          # Szakdolgozat dokumentáció és források
+│   ├── introduction.md
+│   ├── specification.md           # Funkcionális és technikai specifikáció
+│   ├── architecture.md            # Rendszerarchitektúra leírás
+│   ├── usecases.md                # Használati esetek
+│   ├── references.bib             # Hivatkozások BibTeX formátumban
+│   └── diagrams/
+│       ├── uml.png
+│       ├── dataflow.png
+│       └── architecture.drawio
+│
+├── .gitignore                     # Elrejtendő fájlok listája
+├── README.md                      # Projekt összefoglaló
+├── LICENSE                        # Nyílt forráskódú licenc (pl. MIT)
+├── docker-compose.yml             # (opcionális) Docker konténerizáláshoz
+├── .env                           # Környezeti változók
+├── tests/
+│   └── api/
+│       └── test_generate.sh       # CURL/HTTP API tesztek
+├── scripts/
+│   └── setup.sh                   # Telepítési vagy build script
+└── .github/
+    └── workflows/
+        └── ci.yml                 # GitHub Actions CI/CD
