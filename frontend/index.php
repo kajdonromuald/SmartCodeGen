@@ -1,17 +1,37 @@
-<?php
-session_start();
-if (!isset($_SESSION['jwt'])) {
-    header("Location: login.php");
-    exit();
-}
-?>
+
 <!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
     <title>SmartCodeGen - Chat</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
+
+        :root {
+            --accent-color: #8672FF;
+            --base-color: white;
+            --text-color: #2E2B41;
+            --input-color: #F3F0FF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12pt;
+            color: var(--text-color);
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
         .navbar {
             width: 100%;
             background-color: var(--accent-color);
@@ -20,7 +40,6 @@ if (!isset($_SESSION['jwt'])) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-sizing: border-box;
         }
 
         .navbar h2 {
@@ -32,41 +51,35 @@ if (!isset($_SESSION['jwt'])) {
             color: white;
             margin-left: 20px;
             font-weight: bold;
+            text-decoration: none;
         }
 
-        .chat-wrapper {
+        .chat-container {
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: calc(100vh - 60px);
             padding: 20px;
-            box-sizing: border-box;
         }
 
         .chat-box-container {
             width: 100%;
             max-width: 800px;
             background-color: var(--base-color);
-            border: 2px solid var(--accent-color);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            height: 100%;
+            height: 80vh;
         }
 
         .chat-box {
             flex-grow: 1;
+            padding: 15px;
             overflow-y: auto;
-            padding: 10px;
-            background-color: var(--input-color);
-            border-radius: 10px;
-            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
         }
 
         .chat-message {
             margin-bottom: 10px;
-            text-align: left;
         }
 
         .chat-message.user {
@@ -75,39 +88,54 @@ if (!isset($_SESSION['jwt'])) {
 
         .chat-input {
             display: flex;
-            align-items: center;
+            padding: 10px;
             gap: 10px;
         }
 
         .chat-input input {
             flex-grow: 1;
-            padding: 10px 15px;
+            padding: 12px 16px;
             font: inherit;
             border: 2px solid var(--accent-color);
-            border-radius: 20px;
-            background-color: var(--base-color);
+            border-radius: 25px;
+            background-color: var(--input-color);
         }
 
         .chat-input button {
+            width: 48px;
+            height: 48px;
             background-color: var(--accent-color);
-            border: none;
             color: white;
-            padding: 10px 15px;
+            border: none;
             border-radius: 50%;
             font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             transition: transform 0.2s ease;
+            cursor: pointer;
         }
 
         .chat-input button:hover {
             background-color: var(--text-color);
+            transform: scale(1.1);
         }
 
-        .chat-input button:active {
-            transform: scale(1.2);
+        @media (max-width: 600px) {
+            .chat-box-container {
+                height: 90vh;
+                margin: 0 10px;
+            }
+
+            .chat-input input {
+                font-size: 1rem;
+            }
+
+            .chat-input button {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -120,39 +148,64 @@ if (!isset($_SESSION['jwt'])) {
             <a href="logout.php">Kijelentkezés</a>
         </div>
     </div>
-    <div class="chat-wrapper">
+    <div class="chat-container">
         <div class="chat-box-container">
             <div class="chat-box" id="chat-box">
                 <div class="chat-message">🤖 Üdvözöllek a SmartCodeGen rendszerben! Miben segíthetek?</div>
             </div>
             <form class="chat-input" onsubmit="sendMessage(event)">
                 <input type="text" id="user-input" placeholder="Írd be az üzeneted..." required>
-                <button type="submit" title="Küldés">➤</button>
+                <button type="submit">➤</button>
             </form>
         </div>
     </div>
 
     <script>
         function sendMessage(event) {
-            event.preventDefault();
-            const input = document.getElementById('user-input');
-            const message = input.value.trim();
-            if (message === '') return;
+    event.preventDefault();
+    const input = document.getElementById('user-input');
+    const message = input.value.trim();
+    if (message === '') return;
 
-            const chatBox = document.getElementById('chat-box');
-            const userMessage = document.createElement('div');
-            userMessage.className = 'chat-message user';
-            userMessage.textContent = message;
-            chatBox.appendChild(userMessage);
+    const chatBox = document.getElementById('chat-box');
 
-            const botMessage = document.createElement('div');
-            botMessage.className = 'chat-message';
-            botMessage.textContent = '🤖 Dolgozom a válaszon...';
-            chatBox.appendChild(botMessage);
+    // Felhasználói üzenet megjelenítése
+    const userMessage = document.createElement('div');
+    userMessage.className = 'chat-message user';
+    userMessage.textContent = message;
+    chatBox.appendChild(userMessage);
 
-            chatBox.scrollTop = chatBox.scrollHeight;
-            input.value = '';
-        }
+    // Válasz betöltése
+    const botMessage = document.createElement('div');
+    botMessage.className = 'chat-message';
+    botMessage.textContent = '🤖 Dolgozom a válaszon...';
+    chatBox.appendChild(botMessage);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+    input.value = '';
+
+    // 🔗 Fetch a Java backendhez
+    fetch('http://localhost/SmartCodeGen/frontend/index.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            prompt: message,
+            language: 'JAVA' // vagy 'PYTHON', 'JAVASCRIPT'
+        })
+    })
+    .then(response => response.text())
+    .then(data => {
+        botMessage.textContent = '🤖 ' + data;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(error => {
+        botMessage.textContent = '❌ Hiba történt a válasz lekérésekor.';
+        console.error('Hiba:', error);
+    });
+}
+
     </script>
 </body>
 </html>
