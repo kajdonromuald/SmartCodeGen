@@ -1,37 +1,54 @@
 smartcodegen/
-├── backend/                       # Java backend (Spring Boot vagy sima Java)
+├── backend/
 │   ├── src/
 │   │   ├── controller/
 │   │   │   └── CodeGenController.java
 │   │   ├── service/
 │   │   │   └── CodeGenService.java
 │   │   ├── model/
-│   │   │   └── UserRequest.java
+│   │   │   ├── UserRequest.java
+│   │   │   └── Language.java              # Enum a támogatott nyelvekhez
 │   │   ├── util/
 │   │   │   └── TemplateBuilder.java
 │   │   ├── security/
-│   │   │   └── JwtValidator.java
+│   │   │   ├── JwtValidator.java
+│   │   │   └── JwtGenerator.java
 │   │   └── ai/
-│   │       └── AIEngine.java       # Logika, ami az "intelligens" válaszokat adja
+│   │       ├── AIEngine.java              # Fő logika
+│   │       └── generators/                # Nyelvspecifikus generátorok
+│   │           ├── JavaCodeGenerator.java
+│   │           ├── PythonCodeGenerator.java
+│   │           ├── JavaScriptCodeGenerator.java
+│   │           └── CodeGenerator.java     # Interface vagy absztrakt osztály
 │   ├── test/
-│   │   └── CodeGenServiceTest.java
+│   │   ├── CodeGenServiceTest.java
+│   │   └── generators/
+│   │       ├── JavaCodeGeneratorTest.java
+│   │       └── PythonCodeGeneratorTest.java
 │   ├── resources/
-│   │   └── application.properties
-│   └── pom.xml                     # Maven konfiguráció
+│   │   ├── application.properties
+│   │   └── templates/                     # Sablonok nyelvenként
+│   │       ├── java/
+│   │       │   └── class_template.txt
+│   │       ├── python/
+│   │       │   └── function_template.txt
+│   │       └── js/
+│   │           └── module_template.txt
+│   └── pom.xml
 │
-├── frontend/                      # Frontend (statikus vagy dinamikus)
+├── frontend/
 │   ├── public/
-│   │   └── index.html              # Fő oldal
+│   │   └── index.html
 │   ├── css/
 │   │   └── style.css
 │   ├── js/
-│   │   └── app.js
+│   │   └── app.js                         # Nyelvválasztó UI logika
 │   ├── assets/
 │   │   └── logo.png
 │   └── auth/
-│       └── login.php              # PHP-alapú bejelentkezés (JWT-vel)
+│       └── login.php
 │
-├── php-api/                       # Opcionális PHP backend rész (auth, DB)
+├── php-api/
 │   ├── config/
 │   │   └── database.php
 │   ├── auth/
@@ -43,30 +60,31 @@ smartcodegen/
 │   └── .htaccess
 │
 ├── database/
-│   ├── schema.sql                 # Adatbázis szerkezet (felhasználók, logok)
-│   └── seed.sql                   # Tesztadatok
+│   ├── schema.sql
+│   └── seed.sql
 │
-├── docs/                          # Szakdolgozat dokumentáció és források
+├── docs/
 │   ├── introduction.md
-│   ├── specification.md           # Funkcionális és technikai specifikáció
-│   ├── architecture.md            # Rendszerarchitektúra leírás
-│   ├── usecases.md                # Használati esetek
-│   ├── references.bib             # Hivatkozások BibTeX formátumban
+│   ├── specification.md
+│   ├── architecture.md
+│   ├── usecases.md
+│   ├── references.bib
 │   └── diagrams/
 │       ├── uml.png
 │       ├── dataflow.png
 │       └── architecture.drawio
 │
-├── .gitignore                     # Elrejtendő fájlok listája
-├── README.md                      # Projekt összefoglaló
-├── LICENSE                        # Nyílt forráskódú licenc (pl. MIT)
-├── docker-compose.yml             # (opcionális) Docker konténerizáláshoz
-├── .env                           # Környezeti változók
+├── .gitignore
+├── README.md
+├── LICENSE
+├── docker-compose.yml
+├── .env
 ├── tests/
 │   └── api/
-│       └── test_generate.sh       # CURL/HTTP API tesztek
+│       ├── test_generate.sh
+│       └── test_languages.sh             # Többnyelvű API tesztelés
 ├── scripts/
-│   └── setup.sh                   # Telepítési vagy build script
+│   └── setup.sh
 └── .github/
     └── workflows/
-        └── ci.yml                 # GitHub Actions CI/CD
+        └── ci.yml
