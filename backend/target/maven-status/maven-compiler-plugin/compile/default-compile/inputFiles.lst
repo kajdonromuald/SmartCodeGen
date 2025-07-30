@@ -1,0 +1,14 @@
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\service\CodeGenService.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\model\UserRequest.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\ai\AIEngine.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\security\JwtValidator.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\security\JwtGenerator.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\util\TemplateBuilder.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\BackendApplication.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\controller\CodeGenController.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\ai\generators\JavaScriptCodeGenerator.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\ai\generators\JavaCodeGenerator.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\security\SecurityConfig.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\ai\generators\PythonCodeGenerator.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\ai\generators\CodeGenerator.java
+C:\xampp\htdocs\SmartCodeGen\backend\src\main\java\com\smartcodegen\backend\model\Language.java

@@ -1,39 +1,49 @@
 smartcodegen/
 ├── backend/
 │   ├── src/
-│   │   ├── controller/
-│   │   │   └── CodeGenController.java
-│   │   ├── service/
-│   │   │   └── CodeGenService.java
-│   │   ├── model/
-│   │   │   ├── UserRequest.java
-│   │   │   └── Language.java              # Enum a támogatott nyelvekhez
-│   │   ├── util/
-│   │   │   └── TemplateBuilder.java
-│   │   ├── security/
-│   │   │   ├── JwtValidator.java
-│   │   │   └── JwtGenerator.java
-│   │   └── ai/
-│   │       ├── AIEngine.java              # Fő logika
-│   │       └── generators/                # Nyelvspecifikus generátorok
-│   │           ├── JavaCodeGenerator.java
-│   │           ├── PythonCodeGenerator.java
-│   │           ├── JavaScriptCodeGenerator.java
-│   │           └── CodeGenerator.java     # Interface vagy absztrakt osztály
-│   ├── test/
-│   │   ├── CodeGenServiceTest.java
-│   │   └── generators/
-│   │       ├── JavaCodeGeneratorTest.java
-│   │       └── PythonCodeGeneratorTest.java
-│   ├── resources/
-│   │   ├── application.properties
-│   │   └── templates/                     # Sablonok nyelvenként
-│   │       ├── java/
-│   │       │   └── class_template.txt
-│   │       ├── python/
-│   │       │   └── function_template.txt
-│   │       └── js/
-│   │           └── module_template.txt
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   │   └── com/
+│   │   │   │       └── smartcodegen/
+│   │   │   │           └── backend/  # A fő backend package
+│   │   │   │               ├── BackendApplication.java # A fő indító osztály
+│   │   │   │               ├── controller/
+│   │   │   │               │   └── CodeGenController.java
+│   │   │   │               ├── service/
+│   │   │   │               │   └── CodeGenService.java
+│   │   │   │               ├── model/
+│   │   │   │               │   ├── UserRequest.java
+│   │   │   │               │   └── Language.java         # Enum a támogatott nyelvekhez
+│   │   │   │               ├── util/
+│   │   │   │               │   └── TemplateBuilder.java
+│   │   │   │               ├── security/
+│   │   │   │               │   ├── JwtValidator.java
+│   │   │   │               │   └── JwtGenerator.java
+│   │   │   │               └── ai/
+│   │   │   │                   ├── AIEngine.java         # Fő logika
+│   │   │   │                   └── generators/             # Nyelvspecifikus generátorok
+│   │   │   │                       ├── JavaCodeGenerator.java
+│   │   │   │                       ├── PythonCodeGenerator.java
+│   │   │   │                       ├── JavaScriptCodeGenerator.java
+│   │   │   │                       └── CodeGenerator.java  # Interface vagy absztrakt osztály
+│   │   │   └── resources/
+│   │   │       ├── application.properties
+│   │   │       └── templates/                            # Sablonok nyelvenként
+│   │   │           ├── java/
+│   │   │           │   └── class_template.txt
+│   │   │           ├── python/
+│   │   │           │   └── function_template.txt
+│   │   │           └── js/
+│   │   │               └── module_template.txt
+│   │   └── test/
+│   │       └── java/
+│   │           └── com/
+│   │               └── smartcodegen/
+│   │                   └── backend/  # A teszt package, tükrözi a main package-t
+│   │                       ├── CodeGenServiceTest.java
+│   │                       └── generators/
+│   │                           ├── JavaCodeGeneratorTest.java
+│   │                           └── PythonCodeGeneratorTest.java
 │   └── pom.xml
 │
 ├── frontend/
@@ -42,7 +52,7 @@ smartcodegen/
 │   ├── css/
 │   │   └── style.css
 │   ├── js/
-│   │   └── app.js                         # Nyelvválasztó UI logika
+│   │   └── app.js                  # Nyelvválasztó UI logika
 │   ├── assets/
 │   │   └── logo.png
 │   └── auth/
@@ -82,7 +92,7 @@ smartcodegen/
 ├── tests/
 │   └── api/
 │       ├── test_generate.sh
-│       └── test_languages.sh             # Többnyelvű API tesztelés
+│       └── test_languages.sh       # Többnyelvű API tesztelés
 ├── scripts/
 │   └── setup.sh
 └── .github/

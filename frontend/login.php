@@ -17,6 +17,7 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Kapcsolat ellenőrzése
 if ($conn->connect_error) {
+    // Hiba esetén ne csak die, hanem valamilyen felhasználóbarát üzenet vagy logolás
     die("Kapcsolódási hiba: " . $conn->connect_error);
 }
 
@@ -24,50 +25,63 @@ $error_message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
-    $password = $_POST['password'];
+    $plain_password = $_POST['password']; // A felhasználó által beírt sima jelszó
 
+    // Felhasználó lekérése az adatbázisból az email címe alapján
+    // Fontos: a 'password' oszlopot is lekérjük, ami a hashelt jelszót tartalmazza
     $sql = "SELECT id, username, password FROM users WHERE email = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $stmt->store_result();
 
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $username, $stored_password);
-        $stmt->fetch();
-
-        if ($password === $stored_password) {
-            // Bejelentkezés sikeres
-            $secret_key = "your_secret_key";
-            $issuer_claim = "localhost"; 
-            $audience_claim = "localhost"; 
-            $issuedat_claim = time(); 
-            $notbefore_claim = $issuedat_claim; 
-            $expire_claim = $issuedat_claim + 3600; 
-            $token = array(
-                "iss" => $issuer_claim,
-                "aud" => $audience_claim,
-                "iat" => $issuedat_claim,
-                "nbf" => $notbefore_claim,
-                "exp" => $expire_claim,
-                "data" => array(
-                    "id" => $id,
-                    "username" => $username
-                )
-            );
-
-            $jwt = JWT::encode($token, $secret_key, 'HS256');
-            $_SESSION['jwt'] = $jwt;
-            header("Location: main.html");
-            exit();
-        } else {
-            $error_message = "Hibás jelszó.";
-        }
+    // Ellenőrizzük, hogy a prepare sikeres volt-e
+    if ($stmt === false) {
+        $error_message = "Adatbázis lekérdezési hiba előkészítése: " . $conn->error;
     } else {
-        $error_message = "Nincs ilyen felhasználó.";
-    }
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
 
-    $stmt->close();
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result($id, $username, $hashed_password_from_db); // Az adatbázisból hashelve jön
+            $stmt->fetch();
+
+            
+            if (password_verify($plain_password, $hashed_password_from_db)) {
+                // Bejelentkezés sikeres
+                // TODO: A secret_key-t soha ne tárold így a kódban, használd .env fájlt vagy környezeti változót!
+                $secret_key = "your_secret_key";
+                $issuer_claim = "localhost";
+                $audience_claim = "localhost";
+                $issuedat_claim = time();
+                $notbefore_claim = $issuedat_claim;
+                $expire_claim = $issuedat_claim + 3600; // 1 óra érvényesség
+
+                $token = array(
+                    "iss" => $issuer_claim,
+                    "aud" => $audience_claim,
+                    "iat" => $issuedat_claim,
+                    "nbf" => $notbefore_claim,
+                    "exp" => $expire_claim,
+                    "data" => array(
+                        "id" => $id,
+                        "username" => $username
+                    )
+                );
+
+                $jwt = JWT::encode($token, $secret_key, 'HS256');
+                $_SESSION['jwt'] = $jwt; // JWT tárolása sessionben
+                header("Location: main.html"); // Átirányítás a főoldalra
+                exit();
+            } else {
+                // Jelszó nem egyezik
+                $error_message = "Hibás email cím vagy jelszó.";
+            }
+        } else {
+            // Nincs ilyen felhasználó az adatbázisban
+            $error_message = "Hibás email cím vagy jelszó.";
+        }
+
+        $stmt->close();
+    }
 }
 
 $conn->close();
@@ -82,13 +96,16 @@ $conn->close();
     <title>Bejelentkezés</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
+
         .error-message {
             color: red;
             font-weight: bold;
+            margin-top: 10px;
+            text-align: center; 
         }
     </style>
 </head>
-<body>
+<body class="auth-page"> 
     <div class="wrapper">
         <h1>Bejelentkezés</h1>
         <form id="form" action="login.php" method="POST">
@@ -114,6 +131,8 @@ $conn->close();
         </div>
         <p>Új vagy itt? <a href="signup.php">Fiók létrehozása</a></p>
     </div>
-    <div class="welcome-text">Üdvözöljük újra</div>
+    <div class="right-panel"> 
+        <div class="welcome-text">Üdvözöljük újra</div>
+    </div>
 </body>
 </html>

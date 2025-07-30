@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -120,6 +119,19 @@
             background-color: var(--text-color);
             transform: scale(1.1);
         }
+        .footer {
+            width: 100%;
+            background-color: var(--text-color);
+            color: white;
+            text-align: center;
+            padding: 15px 20px;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+        .footer p {
+            margin: 0;
+        }
 
         @media (max-width: 600px) {
             .chat-box-container {
@@ -162,50 +174,52 @@
 
     <script>
         function sendMessage(event) {
-    event.preventDefault();
-    const input = document.getElementById('user-input');
-    const message = input.value.trim();
-    if (message === '') return;
+            event.preventDefault();
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (message === '') return;
 
-    const chatBox = document.getElementById('chat-box');
+            const chatBox = document.getElementById('chat-box');
 
-    // Felhasználói üzenet megjelenítése
-    const userMessage = document.createElement('div');
-    userMessage.className = 'chat-message user';
-    userMessage.textContent = message;
-    chatBox.appendChild(userMessage);
+            const userMessage = document.createElement('div');
+            userMessage.className = 'chat-message user';
+            userMessage.textContent = message;
+            chatBox.appendChild(userMessage);
 
-    // Válasz betöltése
-    const botMessage = document.createElement('div');
-    botMessage.className = 'chat-message';
-    botMessage.textContent = '🤖 Dolgozom a válaszon...';
-    chatBox.appendChild(botMessage);
+            const botMessage = document.createElement('div');
+            botMessage.className = 'chat-message';
+            botMessage.textContent = '🤖 Dolgozom a válaszon...';
+            chatBox.appendChild(botMessage);
 
-    chatBox.scrollTop = chatBox.scrollHeight;
-    input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+            input.value = '';
 
-    // 🔗 Fetch a Java backendhez
-    fetch('http://localhost/SmartCodeGen/frontend/index.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            prompt: message,
-            language: 'JAVA' // vagy 'PYTHON', 'JAVASCRIPT'
-        })
-    })
-    .then(response => response.text())
-    .then(data => {
-        botMessage.textContent = '🤖 ' + data;
-        chatBox.scrollTop = chatBox.scrollHeight;
-    })
-    .catch(error => {
-        botMessage.textContent = '❌ Hiba történt a válasz lekérésekor.';
-        console.error('Hiba:', error);
-    });
-}
-
+            fetch('http://localhost:8080/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prompt: message,
+                    language: 'JAVA'
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                botMessage.textContent = '🤖 ' + data;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch(error => {
+                botMessage.textContent = '❌ Hiba történt a válasz lekérésekor.';
+                console.error('Hiba:', error);
+            });
+        }
     </script>
+
+    <footer class="footer">
+        <p>&copy; <?php echo date("Y"); ?> SmartCodeGen. Minden jog fenntartva.</p>
+        <p>Kapcsolat: info@smartcodegen.com</p>
+        <p>Lehet, hogy az AI által létrehozott tartalom helytelen</p>
+    </footer>
 </body>
 </html>
