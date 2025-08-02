@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $servername = "localhost";
     $username = "root";
     $password = "";
-    $dbname = "coworkly";
+    $dbname = "smartcodegen";
 
     $conn = new mysqli($servername, $username, $password, $dbname);
 

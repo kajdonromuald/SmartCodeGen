@@ -69,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 $jwt = JWT::encode($token, $secret_key, 'HS256');
                 $_SESSION['jwt'] = $jwt; // JWT tárolása sessionben
-                header("Location: main.html"); // Átirányítás a főoldalra
+                header("Location: main.php"); // Átirányítás a főoldalra
                 exit();
             } else {
                 // Jelszó nem egyezik
@@ -94,7 +94,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bejelentkezés</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
     <style>
 
         .error-message {

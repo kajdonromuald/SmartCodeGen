@@ -1,279 +1,369 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
-:root{
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
+
+/* Alapvető változók és reset */
+:root {
     --accent-color: #8672FF;
     --base-color: white;
     --text-color: #2E2B41;
     --input-color: #F3F0FF;
+    --dark-purple: #2E2B41; /* Új változó a sötét lila/szürke színnek */
 }
 
-*{
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
-html{
+html {
     font-family: 'Montserrat', sans-serif;
     font-size: 12pt;
     color: var(--text-color);
-    text-align: center;
+    /* text-align: center; - Ezt eltávolítjuk, mert globálisan mindent középre igazítana */
 }
 
-body{
+/* Általános Body stílusok (minden oldalra) */
+body {
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
-    background-image: url('../assets/background.jpg');
-    background-size: cover;
-    background-position: right;
-    overflow: hidden;
+    background-color: #f0f0f0; /* Egységes háttérszín */
+    overflow-x: hidden; /* Vízszintes görgetés megakadályozása */
+    /* background-image, background-size, background-position, overflow: hidden - ezeket eltávolítjuk,
+       mert a main.php hero-section fogja a "bemutató" részt adni, és a chat oldal más háttért igényelhet */
 }
 
-.wrapper{
-    box-sizing: border-box;
-    box-shadow: 0 14px 20px rgba(0, 0, 0, 0.6);
-    background-color: var(--base-color);
-    height: 100vh;
-    width: max(40%, 600px);
-    padding: 10px;
-    border-radius: 0 20px 20px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.welcome-text {
-    position: absolute;
-    top: 50%;
-    right: 20%;
-    transform: translateY(-50%);
-    font-size: 24px;
-    font-weight: bold;
-}
-
-h1{
-    font-size: 3rem;
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
-form{
-    width: min(400px, 100%);
-    margin-top: 20px;
-    margin-bottom: 25px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-form > div{
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-form label{
-    flex-shrink: 0;
-    height: 50px;
-    width: 50px;
-    background-color: var(--accent-color);
-    fill: var(--base-color);
-    color: var(--base-color);
-    border-radius: 10px 0 0 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5rem;
-    font-weight: 500;    
-}
-
-form input{
-    box-sizing: border-box;
-    flex-grow: 1;
-    min-width: 0;
-    height: 50px;
-    padding: 1em;
-    font: inherit;
-    border-radius: 0 10px 10px 0;
-    border: 2px solid var(--accent-color);
-    background-color: var(--input-color);
-    transition: 150ms ease;
-}
-
-form input:hover{
-    border-color: var(--accent-color);
-}
-
-form input:focus{
-    outline: none;
-    border-color: var(--text-color);
-}
-
-div:has(input:focus) > label{
-    background-color: var(--text-color);
-}
-
-form input::placeholder{
-    color: var(--text-color);
-}
-
-form button{
-    margin-top: 10px;
-    border:none;
-    border-radius: 1000px;
-    padding: .85em 4em;
-    background-color: var(--accent-color);
-    color: var(--base-color);
-    font: inherit;
-    font-weight: 600;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: 150ms ease;
-}
-
-form button:hover{
-    background-color: var(--text-color);
-}
-
-form button:focus{
-    outline: none;
-    background-color: var(--text-color);
-}
-
-a{
+a {
     text-decoration: none;
     color: var(--accent-color);
+    transition: color 0.3s ease;
 }
 
-a:hover{
-    text-decoration: underline;
+a:hover {
+    color: var(--text-color);
+    text-decoration: none; /* A navbar és footer linkek miatt nem akarunk globális aláhúzást */
 }
 
-input[type="checkbox"] {
-    display: none;
-}
 
-input[type="checkbox"] + label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-input[type="checkbox"] + label::before {
-    content: "";
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--accent-color);
-    border-radius: 5px;
-    background-color: var(--base-color);
-    transition: 150ms ease-in-out;
-}
-
-input[type="checkbox"]:checked + label::before {
+/* Új Navbar stílusok */
+.site-header {
     background-color: var(--accent-color);
-    border-color: var(--accent-color);
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.2l-4.2-4.2-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z'/%3E%3C/svg%3E");
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin-top: -10px;
-    background-color: white;
-}
-
-.forgot-password {
-    text-align: center;
-    margin-top: 10px;
-}
-
-.forgot-password a {
-    color: dodgerblue;
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-
-.forgot-password a:hover {
-    text-decoration: underline;
-}
-
-.wrapper p {
-    text-align: center;
-    font-size: 1rem;
-}
-
-.wrapper a {
-    color: dodgerblue;
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-
-.wrapper a:hover {
-    text-decoration: underline;
-}
-
-.modal {
-    display: none;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
+    padding: 15px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    position: sticky;
     top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
 }
 
-.modal-content {
-    background-color: #222;
-    color: white;
-    padding: 20px;
-    width: 50%;
-    max-height: 80vh;
-    overflow-y: auto;
-    border-radius: 10px;
-    position: relative;
-    top: 50%;
-    transform: translateY(-50%);
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
-.close {
-    float: right;
-    font-size: 28px;
-    cursor: pointer;
+.logo {
+    color: var(--base-color);
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
-.section-title {
-    margin-top: 20px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #444;
+.logo:hover {
+    color: #f0f0f0;
 }
 
-.error-message {
-    color: red;
-    font-weight: bold;
+.main-nav .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
 }
 
-.success-message {
-    color: green;
-    font-weight: bold;
+.main-nav .nav-list li {
+    margin-left: 30px;
 }
 
+.main-nav .nav-list li a {
+    color: var(--base-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 5px 0;
+    position: relative;
+    transition: color 0.3s ease;
+}
 
-.welcome-text img {
+.main-nav .nav-list li a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 3px;
+    background-color: var(--base-color);
+    bottom: -5px;
+    left: 0;
+    transition: width 0.3s ease;
+}
+
+.main-nav .nav-list li a:hover::after,
+.main-nav .nav-list li a.active::after {
+    width: 100%;
+}
+
+.main-nav .nav-list li a:hover {
+    color: #f0f0ff;
+}
+
+.menu-toggle {
     display: none;
+    background: none;
+    border: none;
+    color: var(--base-color);
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 5px;
 }
-@media (min-width: 50%) {
-    .welcome-text img {
+
+/* Reszponzivitás a navbarhoz (mobil nézet) */
+@media (max-width: 768px) {
+    .main-nav {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        background-color: var(--accent-color);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        animation: slideDown 0.3s ease-out forwards;
+    }
+
+    .main-nav.active {
+        display: flex;
+    }
+
+    .main-nav .nav-list {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px 0;
+    }
+
+    .main-nav .nav-list li {
+        margin: 15px 0;
+    }
+
+    .main-nav .nav-list li a {
+        font-size: 1.2rem;
+        padding: 10px 0;
         display: block;
     }
+
+    .main-nav .nav-list li a::after {
+        display: none;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+}
+
+
+/* Hero Section (Főoldal specifikus) */
+.hero-section {
+    flex-grow: 1; /* Kitölti a rendelkezésre álló helyet */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(to bottom right, var(--accent-color), #a090ff); /* Színátmenetes háttér */
+    color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    min-height: calc(100vh - 80px - 160px); /* Vh - navbar magasság - footer magasság */
+    /* Ezt a min-height-et még pontosítani kell a footer tényleges magasságához, de jó kiindulópont */
+}
+
+.hero-section h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    font-weight: 900;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.hero-section p {
+    font-size: 1.3rem;
+    max-width: 700px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.hero-button {
+    display: inline-block;
+    padding: 15px 30px;
+    background-color: var(--base-color);
+    color: var(--accent-color);
+    text-decoration: none;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.hero-button:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+    .hero-section p {
+        font-size: 1rem;
+    }
+    .hero-button {
+        font-size: 1rem;
+        padding: 12px 25px;
+    }
+}
+
+
+/* Új Footer stílusok */
+.site-footer {
+    background-color: var(--dark-purple); /* Sötét lila a változóból */
+    color: #ecf0f1;
+    padding: 30px 20px 15px; /* Kisebb padding */
+    font-size: 0.95rem;
+    margin-top: auto;
+    flex-shrink: 0; /* Megakadályozza, hogy a footer összehúzódjon */
+}
+
+.footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 20px; /* Kisebb rés a szekciók között */
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px; /* Kicsit kisebb min-width */
+    margin-bottom: 15px; /* Kisebb alsó margó */
+}
+
+.footer-section h3 {
+    color: var(--accent-color);
+    margin-bottom: 12px; /* Kisebb margó */
+    font-size: 1.1rem; /* Kisebb betűméret */
+    font-weight: 600;
+}
+
+.footer-section p {
+    line-height: 1.5; /* Kicsit szűkebb sorköz */
+    margin-bottom: 8px; /* Kisebb margó */
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 6px; /* Kisebb margó */
+}
+
+.footer-section ul li a {
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: var(--accent-color);
+}
+
+.social-links {
+    margin-top: 10px; /* Kisebb margó */
+}
+
+.social-icon {
+    display: inline-block;
+    width: 30px; /* Kisebb ikonok */
+    height: 30px;
+    background-color: #555;
+    color: white;
+    text-align: center;
+    line-height: 30px;
+    border-radius: 50%;
+    margin-right: 8px; /* Kisebb margó */
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.social-icon:hover {
+    background-color: var(--accent-color);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 15px; /* Kisebb padding */
+    margin-top: 15px; /* Kisebb margó */
+    border-top: 1px solid #444;
+    color: #bdc3c7;
+}
+
+.footer-bottom p {
+    margin: 0;
+}
+
+/* Reszponzivitás a footerhez */
+@media (max-width: 768px) {
+    .site-footer {
+        padding: 20px 15px 10px;
+    }
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    .footer-section {
+        min-width: unset;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .social-links {
+        display: flex;
+        justify-content: center;
+    }
+    .footer-section h3 {
+        font-size: 1rem;
+    }
+    .footer-section p, .footer-section ul li, .footer-bottom p {
+        font-size: 0.85rem;
+    }
+}
+
+
+/* Egyéb régebbi stílusok, amik a main.php-ban vannak, de most valószínűleg nem kellenek */
+/* Ezeket ellenőrizd és töröld, ha nem használod őket sehol! */
+.wrapper, .welcome-text, h1, form, form > div, form label, form input, div:has(input:focus) > label,
+form input::placeholder, form button, input[type="checkbox"], input[type="checkbox"] + label,
+input[type="checkbox"] + label::before, input[type="checkbox"]:checked + label::before,
+.checkbox-container, .forgot-password, .wrapper p, .wrapper a, .modal, .modal-content,
+.close, .section-title, .error-message, .success-message, .welcome-text img {
+   
 }
