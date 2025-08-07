@@ -1,0 +1,22 @@
+{
+    "name": "your-company/smartcodegen",
+    "description": "SmartCodeGen AI code generation tool",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "google/cloud-language": "^1.0",  
+        "vlucas/phpdotenv": "^5.0",
+        "phpmailer/phpmailer": "^6.10",
+        "firebase/php-jwt": "^6.11"
+    },
+    "autoload": {
+        "psr-4": {
+            "SmartCodeGen\\": "backend/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}

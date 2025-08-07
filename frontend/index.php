@@ -7,7 +7,7 @@ session_start();
 define('ROOT_PATH', dirname(__DIR__));
 
 // Composer autoloader betöltése (fontos, hogy ez legyen az első!)
-require_once ROOT_PATH . '/vendor/autoload.php';
+require_once ROOT_PATH . '/frontend/vendor/autoload.php';
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -61,6 +61,33 @@ try {
 } catch (Exception $e) {
     die("Hiba történt a környezeti beállítások betöltésekor.");
 }
+
+// *** ÚJ KÓD: Visszajelzés (feedback) kezelése ***
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'save_feedback') {
+    $messageId = $_POST['message_id'] ?? null;
+    $feedbackType = $_POST['feedback_type'] ?? null;
+
+    if ($messageId && ($feedbackType === 'like' || $feedbackType === 'dislike')) {
+        $feedbackValue = ($feedbackType === 'like') ? 1 : -1;
+        try {
+            $sql = "UPDATE ai_logs SET feedback = :feedback WHERE id = :id AND user_id = :user_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':feedback', $feedbackValue);
+            $stmt->bindParam(':id', $messageId);
+            $stmt->bindParam(':user_id', $user_id);
+            $stmt->execute();
+            echo json_encode(['status' => 'success', 'message' => 'Visszajelzés elmentve.']);
+            exit();
+        } catch (PDOException $e) {
+            error_log("Hiba a visszajelzés mentésekor: " . $e->getMessage());
+            echo json_encode(['status' => 'error', 'message' => 'Hiba a visszajelzés mentésekor.']);
+            exit();
+        }
+    }
+    echo json_encode(['status' => 'error', 'message' => 'Érvénytelen visszajelzési kérés.']);
+    exit();
+}
+
 
 // Ellenőrizzük, hogy a cURL kiterjesztés engedélyezve van-e
 if (!function_exists('curl_init')) {
@@ -141,6 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
         }
 
         // *** MÓDOSÍTOTT KÓD: Adatbázisba mentés a conversation_id-val és a nyers, formázatlan szöveggel ***
+        $lastInsertId = null;
         try {
             $sql = "INSERT INTO ai_logs (user_id, prompt, response, conversation_id) VALUES (:user_id, :prompt, :response, :conversation_id)";
             $stmt = $pdo->prepare($sql);
@@ -149,24 +177,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
             $stmt->bindParam(':response', $aiResponseText);
             $stmt->bindParam(':conversation_id', $conversation_id);
             $stmt->execute();
+            // Lementjük az újonnan létrehozott sor ID-ját
+            $lastInsertId = $pdo->lastInsertId();
         } catch (PDOException $e) {
             error_log("Hiba az adatbázisba mentéskor: " . $e->getMessage());
         }
 
-        // *** MÓDOSÍTOTT KÓD: A válasz HTML formázása a frontendnek elküldés előtt ***
+        // *** MÓDOSÍTOTT KÓD: A válasz HTML formázása a frontendnek elküldés előtt
         $formattedResponse = preg_replace_callback('/```(\w+)?(.*?)```/s', function ($matches) {
-            // Ha PHP nyelv van megadva, használjuk a "clike" nyelvet helyette
-            // Így elkerülhető a Prism.js hiba
-            $language = (!empty($matches[1]) && strtolower($matches[1]) !== 'php') ? htmlspecialchars($matches[1]) : 'clike';
+            // Itt a változtatás: a nyelv mindig az lesz, amit a backtickek után adtunk meg, vagy üres
+            $language = !empty($matches[1]) ? htmlspecialchars($matches[1]) : '';
             $code = trim($matches[2]);
             if (empty($code)) {
                 return '';
             }
-            return '<pre><code class="language-' . $language . '">' . htmlspecialchars($code) . '</code></pre>';
+            // A kódblokkhoz hozzáadjuk a "copy" gombot
+            $html_code = '<div class="code-block-container"><div class="code-block-header"><span class="language-label">' . $language . '</span><button class="copy-button"><i class="fas fa-copy"></i> Másolás</button></div><pre><code class="language-' . $language . '">' . htmlspecialchars($code) . '</code></pre></div>';
+            return $html_code;
         }, $aiResponseText);
 
         header('Content-Type: application/json');
-        echo json_encode(['status' => $error ? 'error' : 'success', 'message' => $formattedResponse]);
+        echo json_encode([
+            'status' => $error ? 'error' : 'success',
+            'message' => $formattedResponse,
+            // Átadjuk az adatbázis ID-t a frontendnek
+            'message_id' => $lastInsertId
+        ]);
         exit();
 
     } catch (Exception $e) {
@@ -185,6 +221,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/index.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-coy.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="fontawesome-free-7.0.0-web/css/all.min.css">
 </head>
 <body>
     <header class="site-header">
@@ -196,10 +233,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
                     <li><a href="index.php">Chat (Kódgenerálás)</a></li>
                     <li><a href="how-it-works.php">Hogyan működik?</a></li>
                     <li><a href="contact.php">Kapcsolat</a></li>
+                    <li><a href="profile.php">Profil</a></li>
                     <li><a href="logout.php">Kijelentkezés</a></li>
                 </ul>
             </nav>
-            <button class="menu-toggle" aria-label="Menü megnyitása">☰</button>
+          <button id="theme-toggle" class="theme-toggle" aria-label="Téma váltása"></button>   <button class="menu-toggle" aria-label="Menü megnyitása">☰</button>
         </div>
     </header>
     <div class="chat-container">
@@ -239,7 +277,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
                 <h3>Kapcsolat</h3>
                 <p>Email: info@smartcodegen.com</p>
                 <p>Cím: Budapest, Magyarország</p>
-                <p class="disclaimer">Az AI által generált tartalom helytelen lehet.</p>
             </div>
         </div>
         <div class="footer-bottom">
@@ -251,5 +288,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="js/navbar.js"></script>
     <script src="js/chat.js"></script>
+    <script src="js/theme.js"></script> 
 </body>
 </html>

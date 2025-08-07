@@ -9,26 +9,24 @@ session_start();
 
 // Adatbázis kapcsolat létrehozása
 $servername = "localhost";
-$username = "root";
-$password = "";
+$username_db = "root";
+$password_db = "";
 $dbname = "smartcodegen";
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $username_db, $password_db, $dbname);
 
 // Kapcsolat ellenőrzése
 if ($conn->connect_error) {
-    // Hiba esetén ne csak die, hanem valamilyen felhasználóbarát üzenet vagy logolás
     die("Kapcsolódási hiba: " . $conn->connect_error);
 }
 
 $error_message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
-    $plain_password = $_POST['password']; // A felhasználó által beírt sima jelszó
+    $email = trim($_POST['email'] ?? '');
+    $plain_password = $_POST['password'] ?? '';
 
     // Felhasználó lekérése az adatbázisból az email címe alapján
-    // Fontos: a 'password' oszlopot is lekérjük, ami a hashelt jelszót tartalmazza
     $sql = "SELECT id, username, password FROM users WHERE email = ?";
     $stmt = $conn->prepare($sql);
 
@@ -41,19 +39,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->store_result();
 
         if ($stmt->num_rows > 0) {
-            $stmt->bind_result($id, $username, $hashed_password_from_db); // Az adatbázisból hashelve jön
+            $stmt->bind_result($id, $username, $hashed_password_from_db);
             $stmt->fetch();
 
-            
             if (password_verify($plain_password, $hashed_password_from_db)) {
                 // Bejelentkezés sikeres
-                // TODO: A secret_key-t soha ne tárold így a kódban, használd .env fájlt vagy környezeti változót!
                 $secret_key = "your_secret_key";
                 $issuer_claim = "localhost";
                 $audience_claim = "localhost";
                 $issuedat_claim = time();
                 $notbefore_claim = $issuedat_claim;
-                $expire_claim = $issuedat_claim + 3600; // 1 óra érvényesség
+                $expire_claim = $issuedat_claim + 3600;
 
                 $token = array(
                     "iss" => $issuer_claim,
@@ -68,22 +64,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 );
 
                 $jwt = JWT::encode($token, $secret_key, 'HS256');
-                $_SESSION['jwt'] = $jwt; // JWT tárolása sessionben
-                header("Location: main.php"); // Átirányítás a főoldalra
+                $_SESSION['jwt'] = $jwt;
+                header("Location: main.php");
                 exit();
             } else {
-                // Jelszó nem egyezik
                 $error_message = "Hibás email cím vagy jelszó.";
             }
         } else {
-            // Nincs ilyen felhasználó az adatbázisban
             $error_message = "Hibás email cím vagy jelszó.";
         }
-
         $stmt->close();
     }
 }
-
 $conn->close();
 
 ?>
@@ -94,9 +86,8 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bejelentkezés</title>
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/styles.css">
     <style>
-
         .error-message {
             color: red;
             font-weight: bold;
@@ -124,7 +115,7 @@ $conn->close();
             <button type="submit">Bejelentkezés</button>
         </form>
         <?php if (!empty($error_message)): ?>
-            <p class="error-message"><?php echo $error_message; ?></p>
+            <p class="error-message"><?php echo htmlspecialchars($error_message); ?></p>
         <?php endif; ?>
         <div class="forgot-password">
             <a href="reset-password.php">Elfelejtett jelszó?</a>

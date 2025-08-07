@@ -1,4 +1,9 @@
 <?php
+// Hibák megjelenítése fejlesztői környezetben
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -16,40 +21,63 @@ $success_message = "";
 $error_message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $repeat_password = $_POST['repeat_password'];
+    // Bemeneti adatok tisztítása
+    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $repeat_password = $_POST['repeat_password'] ?? '';
 
-    if ($password !== $repeat_password) {
+    // Szerveroldali validáció a hibák elkerülése érdekében
+    if (empty($username) || empty($email) || empty($password) || empty($repeat_password)) {
+        $error_message = "Minden mező kitöltése kötelező!";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = "Érvénytelen e-mail cím formátum.";
+    } elseif (strlen($password) < 6) {
+        $error_message = "A jelszónak legalább 6 karakter hosszúnak kell lennie.";
+    } elseif ($password !== $repeat_password) {
         $error_message = "A jelszavak nem egyeznek.";
     } else {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-        // Ellenőrizzük, hogy az email már regisztrálva van-e
+        // Ellenőrizzük, hogy az email már regisztrálva van-e (prepared statement)
         $sql = "SELECT id FROM users WHERE email = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $stmt->store_result();
-
-        if ($stmt->num_rows > 0) {
-            $error_message = "Ez az email már regisztrálva van a rendszerben.";
+        
+        // Ellenőrzés, ha a prepare sikertelen
+        if (!$stmt) {
+            $error_message = "Adatbázis hiba: " . $conn->error;
         } else {
-            $stmt->close();
-
-            $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $username, $email, $hashed_password);
-
-            if ($stmt->execute()) {
-                $success_message = "Sikeres regisztráció!";
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
+    
+            if ($stmt->num_rows > 0) {
+                $error_message = "Ez az email már regisztrálva van a rendszerben.";
             } else {
-                $error_message = "Hiba történt: " . $stmt->error;
+                $stmt->close();
+    
+                // Jelszó hashelése
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    
+                // Adat beszúrása az adatbázisba (prepared statement)
+                $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+    
+                // Ellenőrzés, ha a prepare sikertelen
+                if (!$stmt) {
+                    $error_message = "Adatbázis hiba: " . $conn->error;
+                } else {
+                    $stmt->bind_param("sss", $username, $email, $hashed_password);
+    
+                    if ($stmt->execute()) {
+                        $success_message = "Sikeres regisztráció!";
+                    } else {
+                        $error_message = "Hiba történt: " . $stmt->error;
+                    }
+                }
             }
         }
-
-        $stmt->close();
+        if ($stmt) {
+            $stmt->close();
+        }
     }
 }
 
@@ -62,7 +90,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regisztráció</title>
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <div class="wrapper">
@@ -97,12 +125,15 @@ $conn->close();
             <button type="submit">Regisztráció</button>
         </form>
         <?php if (!empty($success_message)): ?>
-            <p class="success-message"><?php echo $success_message; ?></p>
+            <p class="success-message"><?php echo htmlspecialchars($success_message); ?></p>
         <?php endif; ?>
         <?php if (!empty($error_message)): ?>
-            <p class="error-message"><?php echo $error_message; ?></p>
+            <p class="error-message"><?php echo htmlspecialchars($error_message); ?></p>
         <?php endif; ?>
         <p>Már van fiókja? <a href="login.php">Bejelentkezés</a></p>
+    </div>
+    <div class="right-panel"> 
+        <div class="welcome-text">Üdvözöljük újra</div>
     </div>
 </body>
 </html>

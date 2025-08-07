@@ -127,6 +127,16 @@ class JWT
         if (!$payload instanceof stdClass) {
             throw new UnexpectedValueException('Payload must be a JSON object');
         }
+        if (isset($payload->iat) && !\is_numeric($payload->iat)) {
+            throw new UnexpectedValueException('Payload iat must be a number');
+        }
+        if (isset($payload->nbf) && !\is_numeric($payload->nbf)) {
+            throw new UnexpectedValueException('Payload nbf must be a number');
+        }
+        if (isset($payload->exp) && !\is_numeric($payload->exp)) {
+            throw new UnexpectedValueException('Payload exp must be a number');
+        }
+
         $sig = static::urlsafeB64Decode($cryptob64);
         if (empty($header->alg)) {
             throw new UnexpectedValueException('Empty algorithm');
@@ -154,7 +164,7 @@ class JWT
         // token can actually be used. If it's not yet that time, abort.
         if (isset($payload->nbf) && floor($payload->nbf) > ($timestamp + static::$leeway)) {
             $ex = new BeforeValidException(
-                'Cannot handle token with nbf prior to ' . \date(DateTime::ISO8601, (int) $payload->nbf)
+                'Cannot handle token with nbf prior to ' . \date(DateTime::ATOM, (int) floor($payload->nbf))
             );
             $ex->setPayload($payload);
             throw $ex;
@@ -165,7 +175,7 @@ class JWT
         // correctly used the nbf claim).
         if (!isset($payload->nbf) && isset($payload->iat) && floor($payload->iat) > ($timestamp + static::$leeway)) {
             $ex = new BeforeValidException(
-                'Cannot handle token with iat prior to ' . \date(DateTime::ISO8601, (int) $payload->iat)
+                'Cannot handle token with iat prior to ' . \date(DateTime::ATOM, (int) floor($payload->iat))
             );
             $ex->setPayload($payload);
             throw $ex;

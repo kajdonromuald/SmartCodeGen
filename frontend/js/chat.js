@@ -1,112 +1,146 @@
 // C:\xampp\htdocs\SmartCodeGen\js\chat.js
 
-document.addEventListener('DOMContentLoaded', () => {
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
+function sendMessage(event) {
+    event.preventDefault();
+
+    const input = document.getElementById('user-input');
+    const message = input.value.trim();
+
+    if (message === '') return;
+
     const chatBox = document.getElementById('chat-box');
-    const sendButton = chatForm.querySelector('button[type="submit"]');
 
-    function scrollToBottom() {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    
-    // Módosított displayMessage függvény a CSS osztályok kezelésére
-   function displayMessage(message, type) {
-    const messageDiv = document.createElement('div');
-    
-    const classes = type.split(' ');
-    messageDiv.classList.add('chat-message', ...classes);
-    
-    messageDiv.innerHTML = message;
-    chatBox.appendChild(messageDiv);
-    scrollToBottom();
+    const userMessage = document.createElement('div');
+    userMessage.className = 'chat-message user-message';
+    userMessage.textContent = message;
+    chatBox.appendChild(userMessage);
 
-    // *** MÓDOSÍTOTT KÓD: Célzottan színezünk, és csak a kódblokkokat ***
-    const codeBlocks = messageDiv.querySelectorAll('pre code');
-    codeBlocks.forEach(codeBlock => {
-        try {
-            Prism.highlightElement(codeBlock);
-        } catch (e) {
-            console.error("Hiba történt a Prism.js futtatása közben:", e);
+    const botMessage = document.createElement('div');
+    botMessage.className = 'chat-message ai-text-message';
+    botMessage.innerHTML = '<span class="typing-indicator">🤖 Dolgozom a válaszon...</span>';
+    chatBox.appendChild(botMessage);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+    input.value = '';
+
+    const formData = new FormData();
+    formData.append('user_message', message);
+    
+    fetch('index.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Hálózati hiba: ' + response.statusText);
         }
+        return response.json();
+    })
+    .then(data => {
+        // Frissítsük az utolsó AI üzenetet a tényleges tartalommal
+        botMessage.innerHTML = data.message;
+        
+        // *** ÚJ KÓD: Visszajelzés gombok hozzáadása, ha sikeres a válasz
+        if (data.status === 'success' && data.message_id) {
+            const feedbackContainer = document.createElement('div');
+            feedbackContainer.className = 'feedback-container';
+            feedbackContainer.innerHTML = `
+                <button class="feedback-button" data-message-id="${data.message_id}" data-feedback-type="like">
+                    <i class="far fa-thumbs-up"></i>
+                </button>
+                <button class="feedback-button" data-message-id="${data.message_id}" data-feedback-type="dislike">
+                    <i class="far fa-thumbs-down"></i>
+                </button>
+            `;
+            botMessage.appendChild(feedbackContainer);
+            
+            // Eseménykezelők hozzáadása a gombokhoz
+            feedbackContainer.querySelectorAll('.feedback-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    const button = e.currentTarget;
+                    const messageId = button.dataset.messageId;
+                    const feedbackType = button.dataset.feedbackType;
+                    
+                    const feedbackFormData = new FormData();
+                    feedbackFormData.append('action', 'save_feedback');
+                    feedbackFormData.append('message_id', messageId);
+                    feedbackFormData.append('feedback_type', feedbackType);
+                    
+                    // Küldjük el a visszajelzést a backendnek
+                    fetch('index.php', {
+                        method: 'POST',
+                        body: feedbackFormData
+                    })
+                    .then(response => response.json())
+                    .then(feedbackData => {
+                        if (feedbackData.status === 'success') {
+                            // A gombok inaktívvá tétele, és a szín megváltoztatása
+                            feedbackContainer.querySelectorAll('.feedback-button').forEach(btn => {
+                                btn.disabled = true;
+                                if (btn.dataset.feedbackType === feedbackType) {
+                                    btn.classList.add('active');
+                                }
+                            });
+                        } else {
+                            console.error('Hiba a visszajelzés mentésekor:', feedbackData.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Hiba a visszajelzés küldésekor:', err);
+                    });
+                });
+            });
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        // Kódblokkok felismerése és a másoló gomb funkcionalitásának hozzáadása
+        const codeBlocks = botMessage.querySelectorAll('.code-block-container');
+        codeBlocks.forEach(block => {
+            const preElement = block.querySelector('pre');
+            const copyButton = block.querySelector('.copy-button');
+            
+            if (copyButton && preElement) {
+                copyButton.addEventListener('click', () => {
+                    // A kód tartalmának kinyerése a <pre> tagből
+                    const code = preElement.textContent.trim();
+                    
+                    navigator.clipboard.writeText(code).then(() => {
+                        // Siker esetén a gomb visszajelzése
+                        copyButton.innerHTML = '<i class="fas fa-check"></i> Másolva!';
+                        setTimeout(() => {
+                            copyButton.innerHTML = '<i class="fas fa-copy"></i> Másolás';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Sikertelen másolás:', err);
+                        alert('A másolás sikertelen. Kérjük, próbálja újra!');
+                    });
+                });
+            }
+        });
+        
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAll();
+        }
+    })
+    .catch(error => {
+        console.error('Hiba:', error);
+        botMessage.remove();
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'chat-message ai-text-message error';
+        errorMessage.textContent = '❌ Hiba történt a válasz lekérésekor.';
+        chatBox.appendChild(errorMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
 
-    userInput.addEventListener('input', () => {
-        userInput.style.height = 'auto';
-        userInput.style.height = userInput.scrollHeight + 'px';
-    });
+document.getElementById('chat-form').addEventListener('submit', sendMessage);
 
-    userInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            chatForm.dispatchEvent(new Event('submit'));
-        }
-    });
-
-    chatForm.addEventListener('submit', async function(event) {
+document.getElementById('user-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        
-        userInput.disabled = true;
-        sendButton.disabled = true;
-
-        const userMessage = userInput.value.trim();
-
-        if (userMessage === '') {
-            userInput.disabled = false;
-            sendButton.disabled = false;
-            return;
-        }
-
-        displayMessage(userMessage, 'user-message');
-
-        const originalMessage = userInput.value;
-        userInput.value = '';
-        userInput.style.height = 'auto';
-        
-        const aiTypingDiv = document.createElement('div');
-        aiTypingDiv.classList.add('chat-message', 'ai-text-message', 'typing-indicator');
-        aiTypingDiv.innerHTML = '<div class="spinner"></div> Dolgozom a válaszon...';
-        chatBox.appendChild(aiTypingDiv);
-        scrollToBottom();
-
-        try {
-            const response = await fetch('index.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `user_message=${encodeURIComponent(originalMessage)}`
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP hiba! Státusz: ${response.status}`);
-            }
-
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                displayMessage(data.message, 'ai-text-message');
-            } else {
-                // Javítás: Itt is külön adjuk át az osztályokat
-                displayMessage('Hiba történt: ' + data.message, 'ai-text-message error-message');
-                userInput.value = originalMessage;
-            }
-
-        } catch (error) {
-            console.error('Fetch error:', error);
-            // Javítás: Itt is külön adjuk át az osztályokat
-            displayMessage('Hálózati hiba történt. Kérjük, ellenőrizze az internetkapcsolatot, vagy próbálja újra később.', 'ai-text-message error-message');
-            userInput.value = originalMessage;
-        } finally {
-            if (aiTypingDiv.parentNode === chatBox) {
-                chatBox.removeChild(aiTypingDiv);
-            }
-            userInput.disabled = false;
-            sendButton.disabled = false;
-            userInput.focus();
-        }
-    });
-
-    scrollToBottom();
+        sendMessage(event);
+    }
 });
