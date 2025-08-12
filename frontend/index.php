@@ -36,7 +36,7 @@ try {
     exit();
 }
 
-// *** ÚJ KÓD: Beszélgetési azonosító (conversation_id) kezelése ***
+// *** MÓDOSÍTOTT KÓD: Beszélgetési azonosító (conversation_id) kezelése ***
 // Ellenőrizzük, hogy létezik-e már conversation_id a sessionben.
 // Ha nem, generálunk egy újat, ami az egész beszélgetésre érvényes lesz.
 if (!isset($_SESSION['conversation_id'])) {
@@ -62,30 +62,125 @@ try {
     die("Hiba történt a környezeti beállítások betöltésekor.");
 }
 
-// *** ÚJ KÓD: Visszajelzés (feedback) kezelése ***
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'save_feedback') {
-    $messageId = $_POST['message_id'] ?? null;
-    $feedbackType = $_POST['feedback_type'] ?? null;
 
-    if ($messageId && ($feedbackType === 'like' || $feedbackType === 'dislike')) {
-        $feedbackValue = ($feedbackType === 'like') ? 1 : -1;
-        try {
-            $sql = "UPDATE ai_logs SET feedback = :feedback WHERE id = :id AND user_id = :user_id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':feedback', $feedbackValue);
-            $stmt->bindParam(':id', $messageId);
-            $stmt->bindParam(':user_id', $user_id);
-            $stmt->execute();
-            echo json_encode(['status' => 'success', 'message' => 'Visszajelzés elmentve.']);
-            exit();
-        } catch (PDOException $e) {
-            error_log("Hiba a visszajelzés mentésekor: " . $e->getMessage());
-            echo json_encode(['status' => 'error', 'message' => 'Hiba a visszajelzés mentésekor.']);
-            exit();
+// *** MÓDOSÍTOTT KÓD: Visszajelzés, Beszélgetés újraindítása, listázása és törlése akciók kezelése ***
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
+    if ($_POST['action'] === 'save_feedback') {
+        $messageId = $_POST['message_id'] ?? null;
+        $feedbackType = $_POST['feedback_type'] ?? null;
+
+        if ($messageId && ($feedbackType === 'like' || $feedbackType === 'dislike')) {
+            $feedbackValue = ($feedbackType === 'like') ? 1 : -1;
+            try {
+                $sql = "UPDATE ai_logs SET feedback = :feedback WHERE id = :id AND user_id = :user_id";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':feedback', $feedbackValue);
+                $stmt->bindParam(':id', $messageId);
+                $stmt->bindParam(':user_id', $user_id);
+                $stmt->execute();
+                echo json_encode(['status' => 'success', 'message' => 'Visszajelzés elmentve.']);
+                exit();
+            } catch (PDOException $e) {
+                error_log("Hiba a visszajelzés mentésekor: " . $e->getMessage());
+                echo json_encode(['status' => 'error', 'message' => 'Hiba a visszajelzés mentésekor.']);
+                exit();
+            }
         }
+        echo json_encode(['status' => 'error', 'message' => 'Érvénytelen visszajelzési kérés.']);
+        exit();
+
+    } elseif ($_POST['action'] === 'clear_chat') {
+        // Töröljük a conversation_id-t a session-ből, hogy a következő üzenet új beszélgetést indítson
+        unset($_SESSION['conversation_id']);
+        echo json_encode(['status' => 'success', 'message' => 'A beszélgetés újra lett indítva.']);
+        exit();
+
+    } elseif ($_POST['action'] === 'get_conversations') {
+        // Beszélgetések listázása
+        $sql = "SELECT id, prompt, conversation_id, timestamp
+                FROM ai_logs
+                WHERE user_id = :user_id
+                GROUP BY conversation_id
+                ORDER BY MAX(timestamp) DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':user_id', $user_id);
+        $stmt->execute();
+        $conversations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode(['status' => 'success', 'conversations' => $conversations]);
+        exit();
+        
+    } elseif ($_POST['action'] === 'delete_conversation') {
+        // Beszélgetés törlése
+        $conversationToDelete = $_POST['conversation_id'] ?? null;
+        if ($conversationToDelete) {
+            try {
+                $sql = "DELETE FROM ai_logs WHERE conversation_id = :conversation_id AND user_id = :user_id";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':conversation_id', $conversationToDelete);
+                $stmt->bindParam(':user_id', $user_id);
+                $stmt->execute();
+                
+                // Ha az éppen aktív beszélgetést töröltük, töröljük a sessionből is
+                if ($_SESSION['conversation_id'] === $conversationToDelete) {
+                    unset($_SESSION['conversation_id']);
+                }
+                
+                echo json_encode(['status' => 'success', 'message' => 'Beszélgetés sikeresen törölve.']);
+                exit();
+            } catch (PDOException $e) {
+                error_log("Hiba a beszélgetés törlésekor: " . $e->getMessage());
+                echo json_encode(['status' => 'error', 'message' => 'Hiba a beszélgetés törlésekor.']);
+                exit();
+            }
+        }
+        echo json_encode(['status' => 'error', 'message' => 'Érvénytelen beszélgetés azonosító.']);
+        exit();
+
+    } elseif ($_POST['action'] === 'load_conversation') {
+        // Beszélgetés betöltése
+        $conversationToLoad = $_POST['conversation_id'] ?? null;
+        if ($conversationToLoad) {
+            try {
+                $sql = "SELECT prompt, response, id FROM ai_logs WHERE conversation_id = :conversation_id AND user_id = :user_id ORDER BY timestamp ASC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':conversation_id', $conversationToLoad);
+                $stmt->bindParam(':user_id', $user_id);
+                $stmt->execute();
+                $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // A sessionben is beállítjuk az új conversation_id-t
+                $_SESSION['conversation_id'] = $conversationToLoad;
+                
+                // Formázzuk a válaszokat a frontend számára
+                $html_messages = "";
+                foreach ($messages as $msg) {
+                    $html_messages .= '<div class="chat-message user-message">' . htmlspecialchars($msg['prompt']) . '</div>';
+                    
+                    $aiResponseText = $msg['response'];
+                    $formattedResponse = preg_replace_callback('/```(\w+)?(.*?)```/s', function ($matches) {
+                        $language = !empty($matches[1]) ? htmlspecialchars($matches[1]) : '';
+                        $code = trim($matches[2]);
+                        if (empty($code)) {
+                            return '';
+                        }
+                        return '<div class="code-block-container"><div class="code-block-header"><span class="language-label">' . $language . '</span><button class="copy-button"><i class="fas fa-copy"></i> Másolás</button></div><pre><code class="language-' . $language . '">' . htmlspecialchars($code) . '</code></pre></div>';
+                    }, $aiResponseText);
+                    
+                    $html_messages .= '<div class="chat-message ai-text-message" data-message-id="' . $msg['id'] . '">' . $formattedResponse . '</div>';
+                }
+                
+                echo json_encode(['status' => 'success', 'messages' => $html_messages]);
+                exit();
+            } catch (PDOException $e) {
+                error_log("Hiba a beszélgetés betöltésekor: " . $e->getMessage());
+                echo json_encode(['status' => 'error', 'message' => 'Hiba a beszélgetés betöltésekor.']);
+                exit();
+            }
+        }
+        echo json_encode(['status' => 'error', 'message' => 'Érvénytelen beszélgetés azonosító.']);
+        exit();
     }
-    echo json_encode(['status' => 'error', 'message' => 'Érvénytelen visszajelzési kérés.']);
-    exit();
 }
 
 
@@ -241,14 +336,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
         </div>
     </header>
     <div class="chat-container">
-        <div class="chat-box-container">
+        <div class="sidebar">
+            <button id="new-chat-button" class="new-chat-button"><i class="fas fa-plus"></i> Új beszélgetés</button>
+            <div class="conversations-list-container">
+                <h3>Korábbi beszélgetések</h3>
+                <ul id="conversations-list" class="conversations-list">
+                    </ul>
+            </div>
+        </div>
+        <div class="chat-main-content">
             <div class="chat-box" id="chat-box">
                 <div class="chat-message ai-text-message">🤖 Üdvözöllek a SmartCodeGen rendszerben! Miben segíthetek?</div>
             </div>
-            <form class="chat-input" id="chat-form">
-                <textarea id="user-input" placeholder="Írd be az üzeneted..." required></textarea>
-                <button type="submit">➤</button>
-            </form>
+            <div class="chat-input-wrapper">
+                <form class="chat-input" id="chat-form">
+                    <textarea id="user-input" placeholder="Írd be az üzeneted..." required></textarea>
+                    <button type="submit">➤</button>
+                </form>
+            </div>
         </div>
     </div>
     <footer class="site-footer">
@@ -256,22 +361,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_message'])) {
             <div class="footer-section about">
                 <h3>SmartCodeGen</h3>
                 <p>Intelligens kódtámogató eszköz, amely segít gyorsabban és hatékonyabban fejleszteni, különböző programnyelveken.</p>
-                <div class="social-links">
-                    <a href="#" class="social-icon">F</a>
-                    <a href="#" class="social-icon">T</a>
-                    <a href="#" class="social-icon">L</a>
-                    <a href="#" class="social-icon">G</a>
+              <div class="social-links">
+                    <a href="https://www.facebook.com/romuald.kajdon" class="social-icon">F</a>
+                    <a href="https://https://github.com/kajdonromuald" class="social-icon">G</a>
+                    <a href="https://www.linkedin.com/in/kajdon-romuald-115193351" class="social-icon">L</a>
+                   <a href="mailto:kajdon.r@gmail.com" class="social-icon">M</a>
                 </div>
             </div>
             <div class="footer-section links">
                 <h3>Gyorslinkek</h3>
-                <ul>
-                    <li><a href="index.php">Kódgenerálás</a></li>
-                    <li><a href="how-it-works.php">Hogyan működik?</a></li>
-                    <li><a href="logout.php">Kijelentkezés</a></li>
-                    <li><a href="#">Adatvédelmi Nyilatkozat</a></li>
-                    <li><a href="#">Felhasználási Feltételek</a></li>
-                </ul>
+             <ul>
+                <li><a href="index.php">Kódgenerálás</a></li>
+                <li><a href="how-it-works.php">Hogyan működik?</a></li>
+                <li><a href="logout.php">Kijelentkezés</a></li>
+                <li><a href="portfolio.php">Portfólió</a></li>
+                <li><a href="privacy.php">Adatvédelmi Nyilatkozat</a></li>
+                <li><a href="terms.php">Felhasználási Feltételek</a></li>
+            </ul>
             </div>
             <div class="footer-section contact">
                 <h3>Kapcsolat</h3>

@@ -134,22 +134,23 @@ try {
             <div class="footer-section about">
                 <h3>SmartCodeGen</h3>
                 <p>Intelligens kódtámogató eszköz, amely segít gyorsabban és hatékonyabban fejleszteni, különböző programnyelveken.</p>
-                <div class="social-links">
-                    <a href="#" class="social-icon">F</a>
-                    <a href="#" class="social-icon">T</a>
-                    <a href="#" class="social-icon">L</a>
-                    <a href="#" class="social-icon">G</a>
+               <div class="social-links">
+                    <a href="https://www.facebook.com/romuald.kajdon" class="social-icon">F</a>
+                    <a href="https://https://github.com/kajdonromuald" class="social-icon">G</a>
+                    <a href="https://www.linkedin.com/in/kajdon-romuald-115193351" class="social-icon">L</a>
+                   <a href="mailto:kajdon.r@gmail.com" class="social-icon">M</a>
                 </div>
             </div>
             <div class="footer-section links">
                 <h3>Gyorslinkek</h3>
                 <ul>
-                    <li><a href="index.php">Kódgenerálás</a></li>
-                    <li><a href="how-it-works.php">Hogyan működik?</a></li>
-                    <li><a href="logout.php">Kijelentkezés</a></li>
-                    <li><a href="#">Adatvédelmi Nyilatkozat</a></li>
-                    <li><a href="#">Felhasználási Feltételek</a></li>
-                </ul>
+                <li><a href="index.php">Kódgenerálás</a></li>
+                <li><a href="how-it-works.php">Hogyan működik?</a></li>
+                <li><a href="logout.php">Kijelentkezés</a></li>
+                <li><a href="portfolio.php">Portfólió</a></li>
+                <li><a href="privacy.php">Adatvédelmi Nyilatkozat</a></li>
+                <li><a href="terms.php">Felhasználási Feltételek</a></li>
+            </ul>
             </div>
             <div class="footer-section contact">
                 <h3>Kapcsolat</h3>
